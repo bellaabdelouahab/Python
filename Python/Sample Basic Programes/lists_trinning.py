@@ -1,0 +1,26 @@
+a=[4,8,6,3,2,False,'hello','hey']
+print(a)
+print(list(enumerate(a)))
+for i,j in enumerate(a):
+	print(i,'---->',j)
+print('index of 8 is',a.index(8))
+b=a[0:5]
+print('max is ',max(b),'min is ',min(b),'sum is ',sum(b))
+b.append(99)
+print('max is ',max(b),'min is ',min(b),'sum is ',sum(b))
+b.extend([-9,100,2,1,4,8,7])
+print(b)
+print('max is ',max(b),'min is ',min(b),'sum is ',sum(b))
+b.insert(b.index(100),1000)
+b.remove(100)
+print(b)
+print('max is ',max(b),'min is ',min(b),'sum is ',sum(b))
+print(b.pop(b.index(7)))
+print(b.count(4))
+b.sort()
+print(b)
+#b.reverse()
+print(b)
+def trie(c):
+	return True in (([c[i]<=c[i+1] for i in range(len(c)-1)]))
+print(trie(b))
