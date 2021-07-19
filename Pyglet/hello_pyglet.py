@@ -1,49 +1,40 @@
-from pyglet import shapes,graphics,window,sprite,clock,app
-from pyglet.window import key
-from pyglet.window import event
+from pyglet import graphics,window,clock,app
 from Track import set_track,Set_car
-import numpy as np
-import control as ct
 from math import cos,sin,pi
 windows = window.Window(1000,500)
-keyboard = key.KeyStateHandler()
+keyboard = window.key.KeyStateHandler()
 windows.push_handlers(keyboard)
 rotation_angel=1
 batch = graphics.Batch()
 Tcrack_lines=set_track(batch)
-Car=Set_car(50,0,371,102)
+Car=Set_car()
 windows.set_icon(Car.image)
 
 
 @windows.event
 def on_mouse_press(x,y,button,modifiers):
     print(x,',',y)
-
 def car(carX,carY):
     global Car
-    Car.sprite.rotation+=carX/(rotation_angel*12)
+    Car.sprite.rotation+=carX/(rotation_angel*7)
     Car.Carx+=carY/10*cos((-Car.sprite.rotation+90)*pi/180)
     Car.Cary+=carY/10*sin((-Car.sprite.rotation+90)*pi/180)
-    if abs(-Car.sprite.rotation+90)==360:
-        rotation=90
-    Car.update(Car.Carx,Car.Cary,Car.sprite.rotation,Car.sprite)
-def hover(line,a,b):
-    for i in a:
-        if i in b:
-            line.color=(200,20,20)
-            return i
-    line.color=(20,200,20)
-    return False
-def coords(x,x1,y,y1):
-    if x1==x:
-        return [[x,i] for i in range(y,y1+1)]
+    if abs(-Car.sprite.rotation+90)>=360:
+        Car.sprite.rotation=90
+    Car.update(Car.sprite.rotation,Car.sprite)
+def hover(line,x4,y4,x3,y3,x2,y2,x1,y1):
+    if ((y4-y3)*(x2-x1) - (x4-x3)*(y2-y1))==0:
+        return False
+    uA = ((x4-x3)*(y1-y3) - (y4-y3)*(x1-x3)) / ((y4-y3)*(x2-x1) - (x4-x3)*(y2-y1))
+    uB = ((x2-x1)*(y1-y3) - (y2-y1)*(x1-x3)) / ((y4-y3)*(x2-x1) - (x4-x3)*(y2-y1))
+    if uA >= 0 and uA <= 1 and uB >= 0 and uB <= 1:
+        line[2]=False
+        line[1].opacity=1000
+        line[1].x = x1 + (uA * (x2-x1))
+        line[1].y = y1 + (uA * (y2-y1))
+        return line[1].x,line[1].y
     else:
-        b=(y1-y)/(x1-x)
-        c=y-b*x
-        if abs(x1-x)>abs(y1-y):
-            return ([[i,int(b*i+c)] for i in range(x,x1+1)])
-        else:
-            return ([[int((i-c)/b),i] for i in range(y,y1+1)])
+        return False
     
 def on_draw():
     windows.clear()
@@ -54,28 +45,20 @@ def on_text():
     global Car,rotation_angel
     if keyboard[key.MOTION_DOWN]:
         car(0,Car.velocity)
-        if Car.velocity>-40 :
+        if Car.velocity>-20 :
             Car.velocity-=1
     if keyboard[key.MOTION_UP]:
         car(0,Car.velocity)
-        if Car.velocity<40:
+        if Car.velocity<20:
             Car.velocity+=1
     if keyboard[key.MOTION_LEFT]:
         car(-Car.velocity,0)
         if rotation_angel>1:
-            rotation_angel-=0.5
+            rotation_angel-=1
     if keyboard[key.MOTION_RIGHT]:
         car(Car.velocity,0)
         if rotation_angel>1:
-            rotation_angel-=0.5
-    '''if keyboard[key.MOTION_UP] and keyboard[key.MOTION_LEFT]:
-        car(-Car.velocity,Car.velocity/350)
-    if keyboard[key.MOTION_UP] and keyboard[key.MOTION_RIGHT]:
-        car(Car.velocity,Car.velocity/350)
-    if keyboard[key.MOTION_DOWN] and keyboard[key.MOTION_LEFT]:
-        car(-Car.velocity,Car.velocity/350)
-    if keyboard[key.MOTION_DOWN] and keyboard[key.MOTION_RIGHT]:
-        car(Car.velocity,Car.velocity/350)'''
+            rotation_angel-=1
 
 def update(dt):
     global Car,rotation_angel
@@ -90,7 +73,17 @@ def update(dt):
         car(0,Car.velocity)
     if (not keyboard[key.MOTION_LEFT] and not keyboard[key.MOTION_RIGHT]) and rotation_angel<10:
         rotation_angel+=5
-    #distence= hover(Tcrack_lines[0],coords(Tcrack_lines[0].x,Tcrack_lines[0].x2,Tcrack_lines[0].y,Tcrack_lines[0].y2),coords(lineA_3.x,lineA_3.x2,lineA_3.y,lineA_3.y2))
+    distence=[False]*len(Car.lines)
+    for i in range(0,len(Tcrack_lines)):
+        for j in range(0,len(Car.lines)):
+            x=(hover(Car.lines[j],Tcrack_lines[i].x2,Tcrack_lines[i].y2,Tcrack_lines[i].x,Tcrack_lines[i].y,\
+                Car.lines[j][0].x2,Car.lines[j][0].y2,Car.lines[j][0].x,Car.lines[j][0].y))
+            if x!=False:
+                distence[j]=x
+    #print(distence,'\n')
+    for i in range(0,len(distence)):
+        if distence[i]==False:
+            Car.lines[i][2]=True
 clock.schedule_interval(update, 1/60)
 
 app.run()
