@@ -1,4 +1,3 @@
-import hello_pyglet
 import numpy as np
 from agent import DDQNAgent
 from collections import deque
@@ -24,30 +23,20 @@ def run():
 
     for e in range(N_EPISODES):
         
-        resetgame() #reset env 
+        hello_pyglet.resetgame() #reset env 
 
         done = False
         score = 0
         counter = 0
-        
-        observation_, reward, done = game.step(0)
+        print('working')
+        observation_, reward, done = hello_pyglet.step(0)
         observation = np.array(observation_)
 
         gtime = 0 # set game time back to 0
-        
-        renderFlag = False # if you want to render every episode set to true
-
-        if e % 10 == 0 and e > 0: # render every 10 episodes
-            renderFlag = True
 
         while not done:
-            
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT: 
-                    return
-
             action = ddqn_agent.choose_action(observation)
-            observation_, reward, done = game.step(action)
+            observation_, reward, done = hello_pyglet.step(action)
             observation_ = np.array(observation_)
 
             # This is a countdown if no reward is collected the car will be done within 100 ticks
@@ -68,10 +57,6 @@ def run():
 
             if gtime >= TOTAL_GAMETIME:
                 done = True
-
-            if renderFlag:
-                game.render(action)
-
         eps_history.append(ddqn_agent.epsilon)
         ddqn_scores.append(score)
         avg_score = np.mean(ddqn_scores[max(0, e-100):(e+1)])
@@ -86,7 +71,9 @@ def run():
         print('episode: ', e,'score: %.2f' % score,
               ' average score %.2f' % avg_score,
               ' epsolon: ', ddqn_agent.epsilon,
-              ' memory size', ddqn_agent.memory.mem_cntr % ddqn_agent.memory.mem_size)   
-
-run()
-run_game()
+              ' memory size', ddqn_agent.memory.mem_cntr % ddqn_agent.memory.mem_size)
+           
+@hello_pyglet.windows.event
+def on_mouse_press(x,y,button,modifiers):
+    run()
+hello_pyglet.run_game()

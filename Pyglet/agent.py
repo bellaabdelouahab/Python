@@ -1,8 +1,10 @@
-from keras.layers import Dense, Activation
-from keras.models import Sequential, load_model
-from keras.optimizers import Adam
+
+from tensorflow.keras.layers import Dense, Activation
+from tensorflow.keras.models import Sequential, load_model
+from collections import deque
 import numpy as np
 import tensorflow as tf
+tf.config.experimental.enable_mlir_graph_optimization()
 
 class ReplayBuffer(object):
     def __init__(self, max_size, input_shape, n_actions, discrete=False):
@@ -105,7 +107,7 @@ class DDQNAgent(object):
         self.brain_target.copy_weights(self.brain_eval)
 
     def save_model(self):
-        self.brain_eval.model.save(self.model_file)
+        self.brain_eval.model.save(self.model_file,save_format='h5')
         
     def load_model(self):
         self.brain_eval.model = load_model(self.model_file)
@@ -122,11 +124,12 @@ class Brain:
         
     
     def createModel(self):
-        model = tf.keras.Sequential()
+        model=tf.keras.Sequential()
         model.add(tf.keras.layers.Dense(256, activation=tf.nn.relu)) #prev 256 
         model.add(tf.keras.layers.Dense(self.NbrActions, activation=tf.nn.softmax))
-        model.compile(loss = "mse", optimizer="adam")
-
+        model.compile(loss = "mse", optimizer='adam')
+        model.build((512, 10))
+        model.summary()
         return model
     
     def train(self, x, y, epoch = 1, verbose = 0):

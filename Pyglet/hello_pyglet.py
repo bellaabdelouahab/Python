@@ -83,7 +83,8 @@ def resetgame():
     for _ in range(len(Track_gols)):
         Track_gols[_][1]=False
     Track_gols[0][1]=True
-def update(dt):
+
+def update():
     global Car,rotation_angel
     reward=0
     done=False
@@ -111,7 +112,6 @@ def update(dt):
                 Car.car_shape[j].x2,Car.car_shape[j].y2,Car.car_shape[j].x,Car.car_shape[j].y)):
                 reward-=1
                 done = True
-                resetgame()
     
     for _ in range(len(Track_gols)):
         for i in range(len(Car.car_shape)):
@@ -132,28 +132,115 @@ def update(dt):
     for i in range(0,len(distence)):
         if distence[i]==default_distance[i]:
             Car.lines[i][2]=True
-    print(distence)
+        if distence[i]<default_distance[i]:
+            distence[i]=1
+        else:
+            distence[i]=0
     return distence,reward,done
-clock.schedule_interval(update, 1/60)
-def step(action):
+def step(action=0):
+    if action==0:
+        return [0]*len(default_distance),0,False
     if action==1:
         keyboard[window.key.MOTION_UP]=True
-    elif action==2:
-        keyboard[window.key.MOTION_DOWN]=True
-    elif action==3:
-        keyboard[window.key.MOTION_LEFT]=True
-    elif action==4:
-        keyboard[window.key.MOTION_RIGHT]=True
-def key_up(dt):
-    if keyboard[window.key.MOTION_UP]==True:
-        keyboard[window.key.MOTION_UP]=False
-    if keyboard[window.key.MOTION_DOWN]==True:
         keyboard[window.key.MOTION_DOWN]=False
-    if keyboard[window.key.MOTION_LEFT]==True:
+    elif action==2:
+        '''keyboard[window.key.MOTION_DOWN]=True
+        keyboard[window.key.MOTION_UP]=False'''
+        keyboard[window.key.MOTION_UP]=True
+        keyboard[window.key.MOTION_DOWN]=False
+    elif action==3:
         keyboard[window.key.MOTION_LEFT]=False
-    if keyboard[window.key.MOTION_RIGHT]==True:
         keyboard[window.key.MOTION_RIGHT]=False
-clock.schedule_interval(key_up, 1/6)
+    elif action==4:
+        keyboard[window.key.MOTION_RIGHT]=False
+        keyboard[window.key.MOTION_LEFT]=False
+    elif action ==5:
+        #keyboard[window.key.MOTION_RIGHT]=False
+        #keyboard[window.key.MOTION_LEFT]=False
+        pass
+    elif action==6:
+        #keyboard[window.key.MOTION_DOWN]=False
+        #keyboard[window.key.MOTION_UP]=False
+        pass
+    return update()
+clock.schedule_interval(step, 1/60)
 def run_game():
     app.run()
+
+###############################################################################################
+
+import numpy as np
+from agent import DDQNAgent
+from collections import deque
+import random, math
+
+TOTAL_GAMETIME = 1000 # Max game time for one episode
+N_EPISODES = 30
+REPLACE_TARGET = 50 
+GameTime = 0 
+GameHistory = []
+ddqn_agent = DDQNAgent(alpha=0.0005, gamma=0.99, n_actions=4, epsilon=1.00, epsilon_end=0.10, epsilon_dec=0.9995, replace_target= REPLACE_TARGET, batch_size=512, input_dims=10)
+
+# if you want to load the existing model uncomment this line.
+# careful an existing model might be overwritten
+#ddqn_agent.load_model()
+
+ddqn_scores = []
+eps_history = []
+
+def run():
+
+    for e in range(N_EPISODES):
+        print('fuckyou')
+        resetgame() #reset env 
+
+        done = False
+        score = 0
+        counter = 0
+        observation_, reward, done = step(0)
+        observation = np.array(observation_)
+
+        gtime = 0 # set game time back to 0
+
+        while not done:
+            action = ddqn_agent.choose_action(observation)
+            #print(action)
+            observation_, reward, done = step(action)
+            observation_ = np.array(observation_)
+            #print(done)
+
+            # This is a countdown if no reward is collected the car will be done within 100 ticks
+            if reward == 0:
+                counter += 1
+                if counter > 100:
+                    done = True
+            else:
+                counter = 0
+
+            score += reward
+
+            ddqn_agent.remember(observation, action, reward, observation_, int(done))
+            observation = observation_
+            ddqn_agent.learn()
+            
+            gtime += 1
+
+            if gtime >= TOTAL_GAMETIME:
+                print('time out line 226')
+                done = True
+        eps_history.append(ddqn_agent.epsilon)
+        ddqn_scores.append(score)
+        avg_score = np.mean(ddqn_scores[max(0, e-100):(e+1)])
+
+        if e % REPLACE_TARGET == 0 and e > REPLACE_TARGET:
+            ddqn_agent.update_network_parameters()
+
+        if e % 10 == 0 and e > 10:
+            ddqn_agent.save_model()
+            print("save model")
+            
+        print('episode: ', e,'score: %.2f' % score,' average score %.2f' % avg_score,' epsolon: ', ddqn_agent.epsilon,' memory size', ddqn_agent.memory.mem_cntr % ddqn_agent.memory.mem_size)
+@windows.event
+def on_mouse_press(x,y,button,modifiers):
+    run()
 run_game()
