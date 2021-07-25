@@ -2,10 +2,10 @@
 from tensorflow.keras.layers import Dense, Activation
 from tensorflow.keras.models import Sequential, load_model
 from collections import deque
+from tensorflow.keras import optimizers
 import numpy as np
 import tensorflow as tf
 tf.config.experimental.enable_mlir_graph_optimization()
-
 class ReplayBuffer(object):
     def __init__(self, max_size, input_shape, n_actions, discrete=False):
         self.mem_size = max_size
@@ -127,7 +127,7 @@ class Brain:
         model=tf.keras.Sequential()
         model.add(tf.keras.layers.Dense(256, activation=tf.nn.relu)) #prev 256 
         model.add(tf.keras.layers.Dense(self.NbrActions, activation=tf.nn.softmax))
-        model.compile(loss = "mse", optimizer='adam')
+        model.compile(loss = "mean_squared_erorr", optimizer='sgd')
         model.build((512, 10))
         model.summary()
         return model

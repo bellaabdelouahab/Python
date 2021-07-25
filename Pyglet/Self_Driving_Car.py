@@ -10,7 +10,7 @@ import random, math
 ##################### set game env ##################
 
 TOTAL_GAMETIME = 1000 # Max game time for one episode
-N_EPISODES = 30
+N_EPISODES = 5001
 Episodes_counter = 0
 REPLACE_TARGET = 50 
 GameTime = 0 
@@ -19,7 +19,7 @@ ddqn_agent = DDQNAgent(alpha=0.0005, gamma=0.99, n_actions=4, epsilon=1.00, epsi
 
 # if you want to load the existing model uncomment this line.
 # careful an existing model might be overwritten
-#ddqn_agent.load_model()
+ddqn_agent.load_model()
 
 ddqn_scores = []
 eps_history = []
@@ -117,7 +117,7 @@ def resetgame():
         Track_gols[_][1]=False
     Track_gols[0][1]=True
 
-def update():
+def update(dt):
     global Car,rotation_angel,reward
     done=False
     for keys in keyboard:
@@ -169,13 +169,13 @@ def update():
         else:
             distence[i]=0
     return distence,reward,done
-def step(action=0):
+def step(dt,action=0):
     if action==0:
         return [0]*len(default_distance),0,False
     if action==1:
         keyboard[window.key.MOTION_UP]=True
         keyboard[window.key.MOTION_DOWN]=False
-    elif action==2:
+    '''elif action==2:
         keyboard[window.key.MOTION_DOWN]=True
         keyboard[window.key.MOTION_UP]=False
     elif action==3:
@@ -189,22 +189,15 @@ def step(action=0):
         keyboard[window.key.MOTION_LEFT]=False
     elif action==6:
         keyboard[window.key.MOTION_DOWN]=False
-        keyboard[window.key.MOTION_UP]=False
-    return update()
+        keyboard[window.key.MOTION_UP]=False'''
+    return update(dt)
 
 
 
 
-def run_agent():
+def run_agent(dt):
     global learnning_started,Episodes_counter,done,observation,score,counter,reward,gtime,first_game
     if learnning_started and Episodes_counter<N_EPISODES and done:
-        resetgame() #reset env 
-        done = False
-        score = 0
-        counter = 0
-        observation_, reward, done = step(0)
-        observation = np.array(observation_)
-        gtime = 0   # set game time back to 0
         if not first_game:
             eps_history.append(ddqn_agent.epsilon)
             ddqn_scores.append(score)
@@ -217,14 +210,21 @@ def run_agent():
                 
             print('episode: ', Episodes_counter,'score: %.2f' % score,' average score %.2f' % avg_score,' epsolon: ', ddqn_agent.epsilon,' memory size', ddqn_agent.memory.mem_cntr % ddqn_agent.memory.mem_size)
             Episodes_counter+=1
-def run_an_episode():
+        resetgame() #reset env 
+        done = False
+        score = 0
+        counter = 0
+        observation_, reward, done = step(dt,0)
+        observation = np.array(observation_)
+        gtime = 0   # set game time back to 0
+        
+def run_an_episode(dt):
     global learnning_started,done,observation,counter,score,gtime,first_game
     if learnning_started and not done:
         action = ddqn_agent.choose_action(observation)
         #print(action)
-        observation_, reward, done = step(action)
+        observation_, reward, done = step(dt,action)
         observation_ = np.array(observation_)
-        print(action,done)
 
         # This is a countdown if no reward is collected the car will be done within 100 ticks
         if reward == 0:
@@ -247,6 +247,7 @@ def run_an_episode():
         first_game=False
 clock.schedule_interval(run_agent, 1/60)
 clock.schedule_interval(run_an_episode, 1/60)
+clock.schedule_interval(update, 1/60)
 def run_game():
     app.run()
 
