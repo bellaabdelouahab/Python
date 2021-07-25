@@ -1,4 +1,4 @@
-from pyglet import graphics,window,clock,app
+from pyglet import graphics,window,clock,app,options
 from Track import set_track,Set_car
 from math import cos,sin,pi
 from Gols import SetGoals
@@ -15,7 +15,7 @@ Episodes_counter = 0
 REPLACE_TARGET = 50 
 GameTime = 0 
 GameHistory = []
-ddqn_agent = DDQNAgent(alpha=0.0005, gamma=0.99, n_actions=4, epsilon=1.00, epsilon_end=0.10, epsilon_dec=0.9995, replace_target= REPLACE_TARGET, batch_size=512, input_dims=10)
+ddqn_agent = DDQNAgent(alpha=0.0005, gamma=0.99, n_actions=6, epsilon=1.00, epsilon_end=0.10, epsilon_dec=0.9995, replace_target= REPLACE_TARGET, batch_size=512, input_dims=10)
 
 # if you want to load the existing model uncomment this line.
 # careful an existing model might be overwritten
@@ -36,6 +36,7 @@ learnning_started=False
 
 
 windows = window.Window(1000,500)
+options['debug_gl'] = False
 keyboard = window.key.KeyStateHandler()
 windows.push_handlers(keyboard)
 rotation_angel=1
@@ -175,21 +176,21 @@ def step(dt,action=0):
     if action==1:
         keyboard[window.key.MOTION_UP]=True
         keyboard[window.key.MOTION_DOWN]=False
-    '''elif action==2:
+    elif action==2:
         keyboard[window.key.MOTION_DOWN]=True
         keyboard[window.key.MOTION_UP]=False
     elif action==3:
         keyboard[window.key.MOTION_LEFT]=True
         keyboard[window.key.MOTION_RIGHT]=False
     elif action==4:
-        keyboard[window.key.MOTION_RIGHT]=False
+        keyboard[window.key.MOTION_RIGHT]=True
         keyboard[window.key.MOTION_LEFT]=False
     elif action ==5:
         keyboard[window.key.MOTION_RIGHT]=False
         keyboard[window.key.MOTION_LEFT]=False
     elif action==6:
         keyboard[window.key.MOTION_DOWN]=False
-        keyboard[window.key.MOTION_UP]=False'''
+        keyboard[window.key.MOTION_UP]=False
     return update(dt)
 
 
@@ -217,10 +218,12 @@ def run_agent(dt):
         observation_, reward, done = step(dt,0)
         observation = np.array(observation_)
         gtime = 0   # set game time back to 0
+        print('hhhhhhhhhh')
         
 def run_an_episode(dt):
     global learnning_started,done,observation,counter,score,gtime,first_game
     if learnning_started and not done:
+        print('start',end='==>')
         action = ddqn_agent.choose_action(observation)
         #print(action)
         observation_, reward, done = step(dt,action)
@@ -245,8 +248,9 @@ def run_an_episode(dt):
         if gtime >= TOTAL_GAMETIME:
             done = True
         first_game=False
+        print(f'finish\n fps is {clock.get_fps()}')
 clock.schedule_interval(run_agent, 1/60)
-clock.schedule_interval(run_an_episode, 1/60)
+clock.schedule_interval(run_an_episode, 1/30)
 clock.schedule_interval(update, 1/60)
 def run_game():
     app.run()
