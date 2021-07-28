@@ -130,7 +130,7 @@ class Brain:
         model=tf.keras.Sequential()
         model.add(tf.keras.layers.Dense(256, activation=tf.nn.relu)) #prev 256 
         model.add(tf.keras.layers.Dense(self.NbrActions, activation=tf.nn.softmax))
-        model.compile(loss = "sparse_categorical_crossentropy", optimizer='sgd',metrics=['accuracy'])
+        model.compile(loss = "categorical_crossentropy", optimizer='sgd',metrics=['accuracy'])
         model.build((512, 10))
         model.summary()
         return model

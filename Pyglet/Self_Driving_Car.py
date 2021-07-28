@@ -1,5 +1,5 @@
 from pyglet import graphics,window,clock,app,options
-from Track import set_track,Set_car
+from Track import set_track,Set_car,Set_car1
 from math import cos,sin,pi
 from Gols import SetGoals
 import numpy as np
@@ -9,17 +9,18 @@ import random, math
 
 ##################### set game env ##################
 
-TOTAL_GAMETIME = 1000 # Max game time for one episode
+TOTAL_GAMETIME = 100000 # Max game time for one episode
 N_EPISODES = 5001
 Episodes_counter = 0
 REPLACE_TARGET = 50 
 GameTime = 0 
 GameHistory = []
-ddqn_agent = DDQNAgent(alpha=0.0005, gamma=0.99, n_actions=6, epsilon=1.00, epsilon_end=0.10, epsilon_dec=0.9995, replace_target= REPLACE_TARGET, batch_size=512, input_dims=10)
-
+ddqn_agent = DDQNAgent(alpha=0.0005, gamma=0.99, n_actions=6, epsilon=1.00, epsilon_end=0.10, epsilon_dec=0.9995, replace_target= REPLACE_TARGET, batch_size=512, input_dims=10,fname='ddqn_model.h5')
+#ddqn_agent = DDQNAgent(alpha=0.0005, gamma=0.99, n_actions=5, epsilon=0.02, epsilon_end=0.01, epsilon_dec=0.999, replace_target= REPLACE_TARGET, batch_size=64, input_dims=10,fname='ddqn_model.h5')
 # if you want to load the existing model uncomment this line.
 # careful an existing model might be overwritten
-ddqn_agent.load_model()
+#ddqn_agent.load_model()
+#ddqn_agent.update_network_parameters()
 
 ddqn_scores = []
 eps_history = []
@@ -32,8 +33,10 @@ counter = 0
 gtime = 0 
 first_game=True
 learnning_started=False
+list_of_actions=[]
+render_actions=[]
 #####################################################
-
+show_real_car=False
 
 windows = window.Window(1000,500)
 options['debug_gl'] = False
@@ -44,21 +47,10 @@ batch = graphics.Batch()
 Tcrack_lines=set_track(batch)
 Track_gols=SetGoals(batch)
 Car=Set_car()
+Car2=Set_car1()
 default_distance=Car.set_default_distance(Car.lines)
 windows.set_icon(Car.image)
 
-xL=False
-
-@windows.event
-def on_mouse_press(x,y,button,modifiers):
-    global xL
-    if not xL:
-        print('shapes.Line(',x,' , ',y,',',end='')
-        xL=True
-        return True
-    if xL:
-        print('\b',x,' ,',y,' ,width=1, color=(20, 200, 20), batch=batch)\n')
-        xL=False
 def car(carX,carY):
     global Car
     Car.sprite.rotation+=carX/(rotation_angel*7)
@@ -76,7 +68,6 @@ def hover(line,x4,y4,x3,y3,x2,y2,x1,y1):
     if uA >= 0 and uA <= 1 and uB >= 0 and uB <= 1:
         if line:
             line[2]=False
-            line[1].opacity=1000
             line[1].x = x1 + (uA * (x2-x1))
             line[1].y = y1 + (uA * (y2-y1))
             line[3].text=str(format(((uA * (x2-x1))**2+(uA * (y2-y1)**2))**0.5, ".2f"))
@@ -88,10 +79,13 @@ def hover(line,x4,y4,x3,y3,x2,y2,x1,y1):
     
 def on_draw():
     windows.clear()
-    Car.car.draw()
+    if(show_real_car):
+        Car.car.draw()
+    else:
+        Car2.car.draw()
     batch.draw()
 windows.on_draw=on_draw
-def on_text():
+def move():
     global Car,rotation_angel
     if keyboard[window.key.MOTION_DOWN]:
         car(0,Car.velocity)
@@ -102,28 +96,31 @@ def on_text():
         if Car.velocity<20:
             Car.velocity+=1
     if keyboard[window.key.MOTION_LEFT]:
-        car(-Car.velocity,0)
+        car(-Car.velocity,Car.velocity)
         if rotation_angel>1:
             rotation_angel-=1
     if keyboard[window.key.MOTION_RIGHT]:
-        car(Car.velocity,0)
+        car(Car.velocity,Car.velocity)
         if rotation_angel>1:
             rotation_angel-=1
 def resetgame():
     Car.Carx=371
     Car.Cary=102
-    Car.sprite.rotation=270
+    Car.sprite.rotation=-90
     Car.set_default_distance(Car.lines)
     for _ in range(len(Track_gols)):
         Track_gols[_][1]=False
     Track_gols[0][1]=True
+    for _ in keyboard:
+        keyboard[_]=False
 
-def update(dt):
-    global Car,rotation_angel,reward
+def update(dt,bytf=False):
+    global Car,rotation_angel
+    reward=0
     done=False
     for keys in keyboard:
         if keyboard[keys]:
-            on_text()
+            move()
     if not keyboard[window.key.MOTION_UP] and Car.velocity>0 :
         Car.velocity-=0.5
         car(0,Car.velocity)
@@ -143,15 +140,19 @@ def update(dt):
         for j in range(len(Car.car_shape)):
             if(hover(False,Tcrack_lines[i].x2,Tcrack_lines[i].y2,Tcrack_lines[i].x,Tcrack_lines[i].y,\
                 Car.car_shape[j].x2,Car.car_shape[j].y2,Car.car_shape[j].x,Car.car_shape[j].y)):
-                reward-=1
-                done = True
+                if bytf:
+                    reward-=1
+                    print('hit!!!!!')
+                    done = True
     
     for _ in range(len(Track_gols)):
         for i in range(len(Car.car_shape)):
             if (hover(False,Track_gols[_][0].x2,Track_gols[_][0].y2,Track_gols[_][0].x,Track_gols[_][0].y,\
                 Car.car_shape[i].x2,Car.car_shape[i].y2,Car.car_shape[i].x,Car.car_shape[i].y)) and Track_gols[_][1]:
                 Track_gols[_][1]=False
-                reward+=1
+                if bytf:
+                    reward+=1
+                    print('reward')
                 if _+1==len(Track_gols):
                     Track_gols[0][1]=True
                 else:
@@ -165,10 +166,8 @@ def update(dt):
     for i in range(0,len(distence)):
         if distence[i]==default_distance[i]:
             Car.lines[i][2]=True
-        if distence[i]<default_distance[i]:
-            distence[i]=1
-        else:
-            distence[i]=0
+    if done:
+            distence = None
     return distence,reward,done
 def step(dt,action=0):
     if action==0:
@@ -191,14 +190,14 @@ def step(dt,action=0):
     elif action==6:
         keyboard[window.key.MOTION_DOWN]=False
         keyboard[window.key.MOTION_UP]=False
-    return update(dt)
+    return update(dt,True)
 
 
 
 
 def run_agent(dt):
-    global learnning_started,Episodes_counter,done,observation,score,counter,reward,gtime,first_game
-    if learnning_started and Episodes_counter<N_EPISODES and done:
+    global learnning_started,Episodes_counter,done,observation,score,counter,reward,gtime,first_game,show_real_car,list_of_actions,render_actions
+    if learnning_started and Episodes_counter<N_EPISODES and done and not show_real_car:
         if not first_game:
             eps_history.append(ddqn_agent.epsilon)
             ddqn_scores.append(score)
@@ -211,6 +210,12 @@ def run_agent(dt):
                 
             print('episode: ', Episodes_counter,'score: %.2f' % score,' average score %.2f' % avg_score,' epsolon: ', ddqn_agent.epsilon,' memory size', ddqn_agent.memory.mem_cntr % ddqn_agent.memory.mem_size)
             Episodes_counter+=1
+            if Episodes_counter%1==0:
+                show_real_car=True
+                print('episode number :',Episodes_counter)
+                render_actions=list_of_actions
+            list_of_actions=[]
+
         resetgame() #reset env 
         done = False
         score = 0
@@ -218,17 +223,15 @@ def run_agent(dt):
         observation_, reward, done = step(dt,0)
         observation = np.array(observation_)
         gtime = 0   # set game time back to 0
-        print('hhhhhhhhhh')
         
 def run_an_episode(dt):
-    global learnning_started,done,observation,counter,score,gtime,first_game
-    if learnning_started and not done:
-        print('start',end='==>')
+    global learnning_started,done,observation,counter,score,gtime,first_game,list_of_actions
+    if learnning_started and not done and not show_real_car:
         action = ddqn_agent.choose_action(observation)
         #print(action)
         observation_, reward, done = step(dt,action)
         observation_ = np.array(observation_)
-
+        list_of_actions.append(action)
         # This is a countdown if no reward is collected the car will be done within 100 ticks
         if reward == 0:
             counter += 1
@@ -248,10 +251,24 @@ def run_an_episode(dt):
         if gtime >= TOTAL_GAMETIME:
             done = True
         first_game=False
-        print(f'finish\n fps is {clock.get_fps()}')
+def run_a_round(dt):
+    global render_actions,show_real_car,done
+    if show_real_car:
+        done=False
+        do,re,done=step(dt,render_actions[0])
+        if done:
+            render_actions=[]
+            resetgame()
+            done=False
+            show_real_car=False
+            return False
+        render_actions.pop(0)
+        if len(render_actions)==0:
+            resetgame()
+            show_real_car=False
 clock.schedule_interval(run_agent, 1/60)
-clock.schedule_interval(run_an_episode, 1/30)
-clock.schedule_interval(update, 1/60)
+clock.schedule_interval(run_an_episode, 1/60)
+clock.schedule_interval(run_a_round, 1/60)
 def run_game():
     app.run()
 
