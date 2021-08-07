@@ -1,8 +1,8 @@
 
-from keras.layers import Dense, Activation
-from keras.models import Sequential, load_model
+from tensorflow.keras.layers import Dense, Activation
+from tensorflow.keras.models import Sequential, load_model
 from collections import deque
-from keras import optimizers
+from tensorflow.keras import optimizers
 import numpy as np
 import tensorflow as tf
 tf.config.experimental.enable_mlir_graph_optimization()

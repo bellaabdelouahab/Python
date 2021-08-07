@@ -1,31 +1,41 @@
 from pyglet import graphics,window,clock,app,options,shapes,text
-from Track import set_track,SetGoals
-from Car import Set_car,Set_car1
+from Track import set_track,Set_car,Set_car2
 from math import cos,sin,pi
+from Gols import SetGoals
 import numpy as np
 from agent import DDQNAgent
+from collections import deque
+import random, math
 
 ##################### set game env ##################
 
 TOTAL_GAMETIME = 1000 # Max game time for one episode
 N_EPISODES = 5001
 Episodes_counter = 0
-REPLACE_TARGET = 50
+REPLACE_TARGET = 50 
+GameTime = 0 
 GameHistory = []
-ddqn_agent = DDQNAgent(alpha=0.0005, gamma=0.99, n_actions=6, epsilon=1.00, epsilon_end=0.10, epsilon_dec=0.9995, replace_target= REPLACE_TARGET, batch_size=64, input_dims=10,fname='ddqn_model.h5')
-#ddqn_agent = DDQNAgent(alpha=0.0005, gamma=0.99, n_actions=6, epsilon=0.1, epsilon_end=0.01, epsilon_dec=0.999, replace_target= REPLACE_TARGET, batch_size=64, input_dims=10,fname='ddqn_model.h5')
+ddqn_agent = DDQNAgent(alpha=0.0005, gamma=0.99, n_actions=6, epsilon=1.00, epsilon_end=0.10, epsilon_dec=0.9995, replace_target= REPLACE_TARGET, batch_size=5120, input_dims=10,fname='ddqn_model.h5')
+#ddqn_agent = DDQNAgent(alpha=0.0005, gamma=0.99, n_actions=5, epsilon=0.02, epsilon_end=0.01, epsilon_dec=0.999, replace_target= REPLACE_TARGET, batch_size=64, input_dims=10,fname='ddqn_model.h5')
 # if you want to load the existing model uncomment this line.
 # careful an existing model might be overwritten
-'''ddqn_agent.load_model()
-ddqn_agent.update_network_parameters()'''
+#ddqn_agent.load_model()
+#ddqn_agent.update_network_parameters()
 
 ddqn_scores = []
 eps_history = []
-
-
-
+observation = []
+#game state
+done=True
+reward=0
+score = 0
+counter = 0
+gtime = 0 
+first_game=True
 learnning_started=False
 list_of_actions=[]
+render_actions=[]
+#####################################################
 show_real_car=False
 
 windows = window.Window(1000,500)
@@ -38,7 +48,7 @@ button = graphics.Batch()
 Tcrack_lines=set_track(batch)
 Track_gols=SetGoals(batch)
 Car=Set_car()
-Car1=Set_car1()
+Car1=Set_car2()
 default_distance=Car.set_default_distance(Car.lines)
 start_button=shapes.BorderedRectangle(0, 460, 150, 40, color=(20, 200, 20),border_color=(200,20,20),batch=button)
 start_button.opacity=150
@@ -46,12 +56,14 @@ button_text=text.Label('start learning',font_name='Times New Roman',font_size=16
 #################################
 def on_mouse_press(x,y, button, modifier):
     global learnning_started
+    #print current mouse position
     if 0<x<150 and 460<y<500 :
         learnning_started=not learnning_started
     if learnning_started:
         button_text.text='Stop learning'
     else :
         button_text.text='Start learning'
+    print(x,y)
 #################################
 windows.on_mouse_press=on_mouse_press
 
@@ -107,14 +119,13 @@ def move():
         if rotation_angel>1:
             rotation_angel-=1
 def resetgame():
-    global rotation_angel,Car
+    global default_distance,rotation_angel
     Car.Carx=371
     Car.Cary=102
     Car.sprite.rotation=-90
     Car.velocity=0
     rotation_angel=1
-    Car=Set_car()
-    Car.update(Car.sprite.rotation,Car.sprite)
+    default_distance=Car.set_default_distance(Car.lines)
     for _ in range(len(Track_gols)):
         Track_gols[_][1]=False
     Track_gols[0][1]=True
@@ -125,8 +136,8 @@ def resetgame():
             Track_gols[_][0].color=(20,200,20)
         else:
             Track_gols[_][0].color=(200,20,20)
-    return Car.set_default_distance(Car.lines),0,False
-def on_text_motion(bytf=False):
+
+def on_text_motion(dt,bytf=False):
     global Car,rotation_angel
     reward=0
     done=False
@@ -155,7 +166,7 @@ def on_text_motion(bytf=False):
                 if bytf and not done:
                     reward-=1
                     done = True
-                    print('Crush -1')
+                    print('hit!!!!!')
     x=True
     for _ in range(len(Track_gols)):
         for i in range(len(Car.car_shape)):
@@ -164,7 +175,6 @@ def on_text_motion(bytf=False):
                 Track_gols[_][1]=False
                 if bytf and x:
                     reward+=1
-                    print('Reward +1')
                     x=False
                 if _+1==len(Track_gols):
                     Track_gols[0][1]=True
@@ -182,7 +192,7 @@ def on_text_motion(bytf=False):
     if done:
             distence = None
     return distence,reward,done
-def step(action,bytf=False):
+def step(dt,action,bytf=False):
     if action==0:
         pass
     if action==1:
@@ -203,78 +213,99 @@ def step(action,bytf=False):
     elif action==6:
         keyboard[window.key.MOTION_DOWN]=False
         keyboard[window.key.MOTION_UP]=False
-    return on_text_motion(bytf)
+    return on_text_motion(dt,bytf)
 
 
 
 
 def run_agent(dt):
-    global learnning_started,Episodes_counter,show_real_car,list_of_actions
-    if learnning_started and Episodes_counter<N_EPISODES and not show_real_car:
-        #hide the real car
-        Car.sprite.opacity=0
-        Car1.sprite.opacity=1000
+    global learnning_started,Episodes_counter,done,observation,score,counter,reward,gtime,first_game,show_real_car,list_of_actions,render_actions
+    if learnning_started and Episodes_counter<N_EPISODES and done and not show_real_car:
+        if not first_game:
+            eps_history.append(ddqn_agent.epsilon)
+            ddqn_scores.append(score)
+            avg_score = np.mean(ddqn_scores[max(0, Episodes_counter-100):(Episodes_counter+1)])
+            if Episodes_counter% REPLACE_TARGET == 0 and Episodes_counter> REPLACE_TARGET:
+                ddqn_agent.update_network_parameters()
+            if Episodes_counter% 10 == 0 and Episodes_counter> 10:
+                ddqn_agent.save_model()
+                print("save model")
+                
+            print('episode: ', Episodes_counter,'score: %.2f' % score,' average score %.2f' % avg_score,' epsolon: ', ddqn_agent.epsilon,' memory size', ddqn_agent.memory.mem_cntr % ddqn_agent.memory.mem_size)
+            show_real_car=True
+            render_actions=list_of_actions
+        list_of_actions=[]
         Episodes_counter+=1
+        resetgame() #reset env 
         done = False
         score = 0
         counter = 0
-        observation_, reward, done = resetgame()#reset env
+        observation_, reward, done = step(dt,0)
         observation = np.array(observation_)
         gtime = 0   # set game time back to 0
-        list_of_actions=[]#for the user to see the game in 60fps we store the action and dispaly them later on
-        while not done:
-            action = ddqn_agent.choose_action(observation)
-            observation_, reward, done = step(action,True)
-            observation_ = np.array(observation_)
-            list_of_actions.append(action)
-        # This is a countdown if no reward is collected the car will be done within 100 ticks
-            if reward == 0:
-                counter += 1
-                if counter > 1000:
-                    done = True
-                    print('no reward has been collected')
-            else:
-                counter = 0
-            score += reward
+        if not first_game:
+            print('111111---------------------------------------------------------------------')
 
-            ddqn_agent.remember(observation, action, reward, observation_, int(done))
-            observation = observation_
-            ddqn_agent.learn()
-            
-            gtime += 1
-
-            if gtime >= TOTAL_GAMETIME:
-                done = True
-                print('timeout ')
-        eps_history.append(ddqn_agent.epsilon)
-        ddqn_scores.append(score)
-        avg_score = np.mean(ddqn_scores[max(0, Episodes_counter-100):(Episodes_counter+1)])
-        if Episodes_counter% REPLACE_TARGET == 0 and Episodes_counter> REPLACE_TARGET:
-            ddqn_agent.update_network_parameters()
-        if Episodes_counter% 10 == 0 and Episodes_counter> 10:
-            ddqn_agent.save_model()
-            print("model saved")
-        print('episode: ', Episodes_counter,'score: %.2f' % score,\
-                ' average score %.2f' % avg_score,' epsolon: ',\
-                ddqn_agent.epsilon,' memory size',\
-                ddqn_agent.memory.mem_cntr % ddqn_agent.memory.mem_size)
-        print('-------------------------------------------------------------------------------')
-        resetgame()
-        show_real_car=True
-def render_game(dt):
-    global show_real_car,list_of_actions
-    if show_real_car:
-        Car.sprite.opacity=1000
-        Car1.sprite.opacity=0
-        d,b,done=step(list_of_actions[0],True)
-        if done or  list_of_actions==[]:
+def run_an_episode(dt):
+    global learnning_started,done,observation,counter,score,gtime,first_game,list_of_actions
+    if learnning_started and not done and not show_real_car:    
+        if not show_real_car:
             Car.sprite.opacity=0
-            Car1.sprite.opacity=1000
-            show_real_car=False
-            print('-------------------------------------------------------------------------------')
+            Car1.sprite.opacity=100
+        action = ddqn_agent.choose_action(observation)
+        observation_, reward, done = step(dt,action,True)
+        observation_ = np.array(observation_)
+        list_of_actions.append(action)
+        # This is a countdown if no reward is collected the car will be done within 100 ticks
+        if reward == 0:
+            counter += 1
+            if counter > 1000:
+                done = True
+                print('done in line 239')
         else:
-            list_of_actions.pop(0)
-clock.schedule_interval(render_game, 1/60)
-clock.schedule_interval(run_agent, 1/60)
+            counter = 0
 
-app.run()
+        score += reward
+
+        ddqn_agent.remember(observation, action, reward, observation_, int(done))
+        observation = observation_
+        ddqn_agent.learn()
+        
+        gtime += 1
+
+        if gtime >= TOTAL_GAMETIME:
+            done = True
+            print('timeout ')
+        first_game=False
+def run_a_round(dt):
+    global render_actions,show_real_car,done
+    if show_real_car:
+        Car.sprite.opacity=100
+        Car1.sprite.opacity=0
+        done=False
+        do,re,done=step(dt,render_actions[0],True)
+        if done:
+            render_actions=[]
+            resetgame()
+            done=False
+            show_real_car=False
+            print('2222---------------------------------------------------------------------')
+            return False
+        render_actions.pop(0)
+        if render_actions==[]:
+            resetgame()
+            print('2222---------------------------------------------------------------------')
+            show_real_car=False
+clock.schedule_interval(run_agent, 1/60)
+clock.schedule_interval(run_an_episode, 1/60)
+clock.schedule_interval(run_a_round, 1/60)
+def run_game():
+    app.run()
+
+###############################################################################################        
+@windows.event
+def on_mouse_press(x,y,button,modifiers):
+    global learnning_started
+    if not learnning_started:
+        learnning_started=False
+run_game()
