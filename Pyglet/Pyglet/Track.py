@@ -4,10 +4,10 @@ def set_track(batch):
     return [
         shapes.Line(100 , 350,470 , 452 ,width=1, color=(20, 200, 20), batch=batch),
         shapes.Line(175 , 291,489 , 372 ,width=1, color=(20, 200, 20), batch=batch),
-        shapes.Line(100 , 350, 98 , 196 ,width=1, color=(20, 200, 20), batch=batch),
-        shapes.Line(175 , 291,175 , 192 ,width=1, color=(20, 200, 20), batch=batch),
-        shapes.Line( 98 , 196,  4 , 119 ,width=1, color=(20, 200, 20), batch=batch),
-        shapes.Line(175 , 192, 97 , 119 ,width=1, color=(20, 200, 20), batch=batch),
+        shapes.Line(100 , 350, 62 , 215 ,width=1, color=(20, 200, 20), batch=batch),
+        shapes.Line(175 , 291,140 , 192 ,width=1, color=(20, 200, 20), batch=batch),
+        shapes.Line( 61 , 215,  4 , 119 ,width=1, color=(20, 200, 20), batch=batch),
+        shapes.Line(141 , 192, 97 , 119 ,width=1, color=(20, 200, 20), batch=batch),
         shapes.Line(  4 , 119, 83 ,   2 ,width=1, color=(20, 200, 20), batch=batch),
         shapes.Line( 97 , 119,137 ,  70 ,width=1, color=(20, 200, 20), batch=batch),
         shapes.Line( 83 ,   2,830 ,   2 ,width=1, color=(20, 20, 200), batch=batch),
@@ -20,7 +20,7 @@ def set_track(batch):
         shapes.Line(558 , 452,825 , 220 ,width=1, color=(20, 200, 20), batch=batch),
         shapes.Line(489 , 372,717 , 218 ,width=1, color=(20, 200, 20), batch=batch),
         shapes.Line(826 , 222,829 , 141 ,width=1, color=(20, 200, 20), batch=batch),
-        shapes.Line(175 , 218,716 , 218 ,width=1, color=(20, 200, 20), batch=batch)]
+        shapes.Line(148 , 218,716 , 218 ,width=1, color=(20, 200, 20), batch=batch)]
 class Set_car:
     car = graphics.Batch()
     image=resource.image('unnamed.png')

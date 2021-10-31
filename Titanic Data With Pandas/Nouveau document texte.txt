@@ -1,0 +1,131 @@
+/*    Creation des tableaux   */
+
+CREATE TABLE countries(
+    country_id CHAR(2),
+    country_name VARCHAR2(40),
+    region_id NUMBER
+);
+DESCRIBE countries;
+
+CREATE TABLE departments(
+    department_id NUMBER(4),
+    department_name VARCHAR2(30),
+    manager_id NUMBER(6),
+    location_id NUMBER(4)
+); 
+DESCRIBE departments;
+
+CREATE TABLE employees(
+    employee_id NUMBER(6),
+    first_name VARCHAR2(20),
+    last_name VARCHAR2(25),
+    email VARCHAR2(25),
+    phone_number VARCHAR2(20),
+    hire_date DATE DEFAULT SYSDATE,
+    job_id VARCHAR2(10),
+    salary NUMBER(8,2),
+    commission_pct NUMBER(2,2),
+    manager_id NUMBER(6),
+    department_id NUMBER(4)
+);
+DESCRIBE employees;
+
+CREATE TABLE jobs(
+    job_id VARCHAR2(10),
+    job_title VARCHAR2(35),
+    min_salary NUMBER(6),
+    max_salary NUMBER(6)
+);
+DESC jobs;
+
+CREATE TABLE job_grades(
+    grade_level VARCHAR2(3),
+    lowest_sal NUMBER,
+    highest_sal NUMBER
+);
+desc job_grades;
+
+CREATE TABLE job_history(
+    employee_id NUMBER(6),
+    start_date DATE DEFAULT sysdate,
+    end_date DATE,
+    job_id VARCHAR2(10),
+    departement_id NUMBER(4)
+);
+desc job_history;
+
+CREATE TABLE locations(
+    location_id number(4),
+    street_adresse VARCHAR2(40),
+    postal_code VARCHAR2(12),
+    city VARCHAR2(30),
+    state_province VARCHAR2(25),
+    country_id CHAR(2)
+);
+desc locations;
+
+CREATE TABLE regions(
+    region_id NUMBER,
+    region_name VARCHAR2(25)
+);
+desc regions;
+
+/*   foreigne keys  */
+
+ALTER TABLE countries add constraint count_prim primary key(country_id);
+ALTER TABLE departments add constraint depa_prim primary key(department_id);
+ALTER TABLE employees add constraint emp_prim primary key(employee_id);
+ALTER TABLE jobs add constraint job_prim primary key(job_id);
+ALTER TABLE job_grades add constraint grade_job_prim primary key(grade_level);
+ALTER TABLE job_history add constraint history_job_prim primary key(employee_id,job_id,departement_id);
+ALTER TABLE locations add constraint location_prim primary key(location_id);
+ALTER TABLE regions add constraint region_prim primary key(region_id);
+
+/*    REFERENCE KEY   */
+
+savepoint  a;
+commit ;
+
+alter table countries add constraint count_ref FOREIGN key(region_id) references regions(region_id);
+alter table departments add constraint depa_ref FOREIGN key(location_id) references locations(location_id);
+alter table departments add constraint depa2_ref FOREIGN key(manager_id) references employees(employee_id);
+alter table employees add constraint emp1_ref foreign key(job_id) references jobs(job_id);
+alter table employees add constraint emp2_ref foreign key(department_id) references departments(department_id);
+alter table job_history add constraint jobh1_ref foreign key(employee_id) references employees(employee_id);
+alter table job_history add constraint jobh2_ref foreign key(job_id) references jobs(job_id);
+alter table job_history add constraint jobh3_ref foreign key(departement_id) references departments(department_id);
+alter table locations add constraint loc_ref foreign key(country_id) references countries(country_id);
+
+savepoint  b;
+commit ;
+
+/*  other constraint   */
+alter table countries modify country_id not null;
+desc countries;
+alter table departments modify department_id not null;
+alter table departments modify department_name not null;
+desc departments;
+alter table employees modify employee_id not null;
+alter table employees modify last_name not null;
+alter table employees modify email not null;
+alter table employees modify hire_date not null;
+alter table employees modify job_id not null;
+desc employees;
+alter table jobs modify job_id not null;
+alter table jobs modify job_title not null;
+desc jobs
+alter table job_history modify employee_id not null;
+alter table job_history modify start_date not null;
+alter table job_history modify end_date not null;
+desc job_history;
+alter table locations modify location_id not null;
+alter table locations modify city not null;
+desc locations;SS
+alter table regions modify region_id not null;
+desc regions;
+alter table employees add constraint sala_ch check(salary>0);
+alter table employees add constraint emp_unique unique(email);
+alter table jobs add constraint job_ch check(max_salary>min_salary);
+alter table job_grades add constraint job_grad_ch check(highest_sal>lowest_sal);
+savepoint c;
+commit ;

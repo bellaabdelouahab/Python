@@ -49,7 +49,7 @@ class ReplayBuffer(object):
         return states, actions, rewards, states_, terminal
 
 class DDQNAgent(object):
-    def __init__(self, alpha, gamma, n_actions, epsilon, batch_size,input_dims, epsilon_dec=0.999995,  epsilon_end=0.10,mem_size=25000, fname='ddqn_model.h5', replace_target=25):
+    def __init__(self, alpha, gamma, n_actions, epsilon, batch_size,input_dims, epsilon_dec=0.999995,  epsilon_end=0.01,mem_size=1000000, fname='ddqn_model.h5', replace_target=25):
         self.action_space = [i for i in range(n_actions)]
         self.n_actions = n_actions
         self.gamma = gamma
@@ -61,8 +61,8 @@ class DDQNAgent(object):
         self.replace_target = replace_target
         self.memory = ReplayBuffer(mem_size, input_dims, n_actions, discrete=True)
 
-        self.brain_eval = Brain(input_dims, n_actions, batch_size)
-        self.brain_target = Brain(input_dims, n_actions, batch_size)
+        self.brain_eval = Brain(alpha,input_dims, n_actions, batch_size,256,256)
+        self.brain_target = Brain(alpha,input_dims, n_actions, batch_size,256,256)
 
 
     def remember(self, state, action, reward, new_state, done):
@@ -70,7 +70,7 @@ class DDQNAgent(object):
 
     def choose_action(self, state):
 
-        state = np.array(state)
+        #state = np.array(state)
         state = state[np.newaxis, :]
 
         rand = np.random.random()
@@ -83,27 +83,29 @@ class DDQNAgent(object):
         return action
 
     def learn(self):
-        if self.memory.mem_cntr > self.batch_size:
-            state, action, reward, new_state, done = self.memory.sample_buffer(self.batch_size)
+        if self.memory.mem_cntr < self.batch_size:
+            return
+    
+        state, action, reward, new_state, done = self.memory.sample_buffer(self.batch_size)
 
-            action_values = np.array(self.action_space, dtype=np.int8)
-            action_indices = np.dot(action, action_values)
+        action_values = np.array(self.action_space, dtype=np.int8)
+        action_indices = np.dot(action, action_values)
 
-            q_next = self.brain_target.predict(new_state)
-            q_eval = self.brain_eval.predict(new_state)
-            q_pred = self.brain_eval.predict(state)
+        q_next = self.brain_target.predict(new_state)
+        q_eval = self.brain_eval.predict(new_state)
+        q_pred = self.brain_eval.predict(state)
 
-            max_actions = np.argmax(q_eval, axis=1)
+        max_actions = np.argmax(q_eval, axis=1)
 
-            q_target = q_pred
+        q_target = q_pred
 
-            batch_index = np.arange(self.batch_size, dtype=np.int32)
+        batch_index = np.arange(self.batch_size, dtype=np.int32)
 
-            q_target[batch_index, action_indices] = reward + self.gamma*q_next[batch_index, max_actions.astype(int)]*done
+        q_target[batch_index, action_indices] = reward + self.gamma*q_next[batch_index, max_actions.astype(int)]*done
 
-            _ = self.brain_eval.train(state, q_target)
+        _ = self.brain_eval.train(state, q_target)
 
-            self.epsilon = self.epsilon*self.epsilon_dec if self.epsilon > self.epsilon_min else self.epsilon_min
+        self.epsilon = self.epsilon*self.epsilon_dec if self.epsilon > self.epsilon_min else self.epsilon_min
 
 
     def update_network_parameters(self):

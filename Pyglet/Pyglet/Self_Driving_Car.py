@@ -3,7 +3,7 @@ from Track import set_track,Set_car,Set_car2
 from math import cos,sin,pi
 from Gols import SetGoals
 import numpy as np
-from agent import DDQNAgent
+from agent_dqn import DDQNAgent
 from collections import deque
 import random, math
 
@@ -15,7 +15,7 @@ Episodes_counter = 0
 REPLACE_TARGET = 50 
 GameTime = 0 
 GameHistory = []
-ddqn_agent = DDQNAgent(alpha=0.0005, gamma=0.99, n_actions=6, epsilon=1.00, epsilon_end=0.10, epsilon_dec=0.9995, replace_target= REPLACE_TARGET, batch_size=5120, input_dims=10,fname='ddqn_model.h5')
+ddqn_agent = DDQNAgent(alpha=0.0005, gamma=0.99, n_actions=6, epsilon=1.0, epsilon_end=0.10, batch_size=3096, input_dims=10)
 #ddqn_agent = DDQNAgent(alpha=0.0005, gamma=0.99, n_actions=5, epsilon=0.02, epsilon_end=0.01, epsilon_dec=0.999, replace_target= REPLACE_TARGET, batch_size=64, input_dims=10,fname='ddqn_model.h5')
 # if you want to load the existing model uncomment this line.
 # careful an existing model might be overwritten
@@ -49,6 +49,7 @@ Tcrack_lines=set_track(batch)
 Track_gols=SetGoals(batch)
 Car=Set_car()
 Car1=Set_car2()
+Car1.sprite.opacity=0
 default_distance=Car.set_default_distance(Car.lines)
 start_button=shapes.BorderedRectangle(0, 460, 150, 40, color=(20, 200, 20),border_color=(200,20,20),batch=button)
 start_button.opacity=150
@@ -159,7 +160,7 @@ def on_text_motion(dt,bytf=False):
                 Car.lines[j][0].x2,Car.lines[j][0].y2,Car.lines[j][0].x,Car.lines[j][0].y))
             if x!=False:
                 if distence[j] and x<distence[j] or not distence[j]:
-                    distence[j]=x
+                    distence[j]=x/100
         for j in range(len(Car.car_shape)):
             if(hover(False,Tcrack_lines[i].x2,Tcrack_lines[i].y2,Tcrack_lines[i].x,Tcrack_lines[i].y,\
                 Car.car_shape[j].x2,Car.car_shape[j].y2,Car.car_shape[j].x,Car.car_shape[j].y)):
@@ -194,23 +195,21 @@ def on_text_motion(dt,bytf=False):
     return distence,reward,done
 def step(dt,action,bytf=False):
     if action==0:
-        pass
-    if action==1:
         keyboard[window.key.MOTION_UP]=True
         keyboard[window.key.MOTION_DOWN]=False
-    elif action==2:
+    elif action==1:
         keyboard[window.key.MOTION_DOWN]=True
         keyboard[window.key.MOTION_UP]=False
-    elif action==3:
+    elif action==2:
         keyboard[window.key.MOTION_LEFT]=True
         keyboard[window.key.MOTION_RIGHT]=False
-    elif action==4:
+    elif action==3:
         keyboard[window.key.MOTION_RIGHT]=True
         keyboard[window.key.MOTION_LEFT]=False
-    elif action ==5:
+    elif action==4:
         keyboard[window.key.MOTION_RIGHT]=False
         keyboard[window.key.MOTION_LEFT]=False
-    elif action==6:
+    elif action==5:
         keyboard[window.key.MOTION_DOWN]=False
         keyboard[window.key.MOTION_UP]=False
     return on_text_motion(dt,bytf)
@@ -240,7 +239,7 @@ def run_agent(dt):
         done = False
         score = 0
         counter = 0
-        observation_, reward, done = step(dt,0)
+        observation_= [i/100 for i in default_distance]
         observation = np.array(observation_)
         gtime = 0   # set game time back to 0
         if not first_game:
@@ -299,6 +298,7 @@ def run_a_round(dt):
 clock.schedule_interval(run_agent, 1/60)
 clock.schedule_interval(run_an_episode, 1/60)
 clock.schedule_interval(run_a_round, 1/60)
+#clock.schedule_interval(move,1/60)
 def run_game():
     app.run()
 
