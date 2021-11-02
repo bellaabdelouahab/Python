@@ -1,7 +1,7 @@
 import pyglet
 def SetGoals(batch):
     return[
-        [pyglet.shapes.Line( 310  ,  139 , 310  ,  72  ,width=1, color=(200,20, 20), batch=batch),True],
+        [pyglet.shapes.Line( 310  ,  139 , 310  ,  72  ,width=1, color=(200,20, 20), batch=batch),False],
         [pyglet.shapes.Line( 250  ,  139 , 250  ,  72  ,width=1, color=(200,20, 20), batch=batch),False],
         [pyglet.shapes.Line( 284  ,  144 , 284  , 216  ,width=1, color=(200,20, 20), batch=batch),False],
         [pyglet.shapes.Line( 372  ,  143 , 372  , 217  ,width=1, color=(200,20, 20), batch=batch),False],
@@ -21,7 +21,7 @@ def SetGoals(batch):
         [pyglet.shapes.Line( 571  ,   71 , 571  ,   5  ,width=1, color=(200,20, 20), batch=batch),False],
         [pyglet.shapes.Line( 715  ,   69 , 715  ,   2  ,width=1, color=(200,20, 20), batch=batch),False],
         [pyglet.shapes.Line( 782  ,   71 , 854  ,  72  ,width=1, color=(200,20, 20), batch=batch),False],
-        [pyglet.shapes.Line( 709  ,  141 , 709  ,  74  ,width=1, color=(200,20, 20), batch=batch),False],
+        [pyglet.shapes.Line( 709  ,  141 , 709  ,  74  ,width=1, color=(200,20, 20), batch=batch),True],
         [pyglet.shapes.Line( 607  ,  139 , 607  ,  73  ,width=1, color=(200,20, 20), batch=batch),False],
         [pyglet.shapes.Line( 473  ,  141 , 473  ,  70  ,width=1, color=(200,20, 20), batch=batch),False],
         [pyglet.shapes.Line( 376  ,  139 , 375  ,  72  ,width=1, color=(200,20, 20), batch=batch),False],

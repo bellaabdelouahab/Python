@@ -1,4 +1,4 @@
-'''import webbrowser
+import webbrowser
 import pyautogui
 import time
 
@@ -26,5 +26,5 @@ time.sleep(1)
 pyautogui.typewrite(my_msg)
 
 time.sleep(1)
-pyautogui.click(1332,692) # click on Send button'''
+pyautogui.click(1332,692) # click on Send button
 

@@ -24,7 +24,7 @@ def set_track(batch):
 class Set_car:
     car = graphics.Batch()
     image=resource.image('unnamed.png')
-    Carx=371
+    Carx=752
     Cary=102
     image.width=20
     image.height=40
@@ -92,7 +92,7 @@ class Set_car:
 class Set_car2:
     car1 = graphics.Batch()
     image=resource.image('unnamed.png')
-    Carx=371
+    Carx=752
     Cary=102
     image.width=20
     image.height=40

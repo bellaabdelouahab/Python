@@ -6,8 +6,8 @@ import numpy as np
 from agent_dqn import DDQNAgent
 from collections import deque
 import random, math
-
 ##################### set game env ##################
+
 
 TOTAL_GAMETIME = 1000 # Max game time for one episode
 N_EPISODES = 5001
@@ -15,12 +15,12 @@ Episodes_counter = 0
 REPLACE_TARGET = 50 
 GameTime = 0 
 GameHistory = []
-ddqn_agent = DDQNAgent(alpha=0.0005, gamma=0.99, n_actions=6, epsilon=1.0, epsilon_end=0.10, batch_size=3096, input_dims=10)
+ddqn_agent = DDQNAgent(alpha=0.0005, gamma=0.999995, n_actions=6, epsilon=1.0, epsilon_end=0.01, batch_size=96, input_dims=10)
 #ddqn_agent = DDQNAgent(alpha=0.0005, gamma=0.99, n_actions=5, epsilon=0.02, epsilon_end=0.01, epsilon_dec=0.999, replace_target= REPLACE_TARGET, batch_size=64, input_dims=10,fname='ddqn_model.h5')
 # if you want to load the existing model uncomment this line.
 # careful an existing model might be overwritten
-#ddqn_agent.load_model()
-#ddqn_agent.update_network_parameters()
+ddqn_agent.load_model()
+ddqn_agent.update_network_parameters()
 
 ddqn_scores = []
 eps_history = []
@@ -101,7 +101,7 @@ def on_draw():
     batch.draw()
     button.draw()
 windows.on_draw=on_draw
-def move():
+def move(dt):
     global Car,rotation_angel
     if keyboard[window.key.MOTION_DOWN]:
         car(0,Car.velocity)
@@ -121,7 +121,7 @@ def move():
             rotation_angel-=1
 def resetgame():
     global default_distance,rotation_angel
-    Car.Carx=371
+    Car.Carx=752
     Car.Cary=102
     Car.sprite.rotation=-90
     Car.velocity=0
@@ -129,7 +129,7 @@ def resetgame():
     default_distance=Car.set_default_distance(Car.lines)
     for _ in range(len(Track_gols)):
         Track_gols[_][1]=False
-    Track_gols[0][1]=True
+    Track_gols[20][1]=True
     for _ in keyboard:
         keyboard[_]=False
     for _ in range(len(Track_gols)):
@@ -144,7 +144,7 @@ def on_text_motion(dt,bytf=False):
     done=False
     for keys in keyboard:
         if keyboard[keys]:
-            move()
+            move(dt)
     if not keyboard[window.key.MOTION_UP] and Car.velocity>0 :
         Car.velocity-=0.5
         car(0,Car.velocity)
@@ -164,17 +164,18 @@ def on_text_motion(dt,bytf=False):
         for j in range(len(Car.car_shape)):
             if(hover(False,Tcrack_lines[i].x2,Tcrack_lines[i].y2,Tcrack_lines[i].x,Tcrack_lines[i].y,\
                 Car.car_shape[j].x2,Car.car_shape[j].y2,Car.car_shape[j].x,Car.car_shape[j].y)):
-                if bytf and not done:
+                if not done:
                     reward-=1
                     done = True
-                    print('hit!!!!!')
+                    print('-1')
     x=True
     for _ in range(len(Track_gols)):
         for i in range(len(Car.car_shape)):
             if (hover(False,Track_gols[_][0].x2,Track_gols[_][0].y2,Track_gols[_][0].x,Track_gols[_][0].y,\
                 Car.car_shape[i].x2,Car.car_shape[i].y2,Car.car_shape[i].x,Car.car_shape[i].y)) and Track_gols[_][1]:
                 Track_gols[_][1]=False
-                if bytf and x:
+                if x:
+                    print('+1')
                     reward+=1
                     x=False
                 if _+1==len(Track_gols):
@@ -192,7 +193,10 @@ def on_text_motion(dt,bytf=False):
             Car.lines[i][2]=True
     if done:
             distence = None
-    return distence,reward,done
+    if(bytf):
+        return distence,reward,done
+    else:
+        return done
 def step(dt,action,bytf=False):
     if action==0:
         keyboard[window.key.MOTION_UP]=True
@@ -214,7 +218,7 @@ def step(dt,action,bytf=False):
         keyboard[window.key.MOTION_UP]=False
     return on_text_motion(dt,bytf)
 
-
+resetgame()
 
 
 def run_agent(dt):
@@ -229,7 +233,7 @@ def run_agent(dt):
             if Episodes_counter% 10 == 0 and Episodes_counter> 10:
                 ddqn_agent.save_model()
                 print("save model")
-                
+            print(score) 
             print('episode: ', Episodes_counter,'score: %.2f' % score,' average score %.2f' % avg_score,' epsolon: ', ddqn_agent.epsilon,' memory size', ddqn_agent.memory.mem_cntr % ddqn_agent.memory.mem_size)
             show_real_car=True
             render_actions=list_of_actions
@@ -249,8 +253,8 @@ def run_an_episode(dt):
     global learnning_started,done,observation,counter,score,gtime,first_game,list_of_actions
     if learnning_started and not done and not show_real_car:    
         if not show_real_car:
-            Car.sprite.opacity=0
-            Car1.sprite.opacity=100
+            Car.sprite.opacity=1000
+            Car1.sprite.opacity=0
         action = ddqn_agent.choose_action(observation)
         observation_, reward, done = step(dt,action,True)
         observation_ = np.array(observation_)
@@ -279,10 +283,10 @@ def run_an_episode(dt):
 def run_a_round(dt):
     global render_actions,show_real_car,done
     if show_real_car:
-        Car.sprite.opacity=100
+        Car.sprite.opacity=1000
         Car1.sprite.opacity=0
         done=False
-        do,re,done=step(dt,render_actions[0],True)
+        done=step(dt,render_actions[0],False)
         if done:
             render_actions=[]
             resetgame()
@@ -295,10 +299,14 @@ def run_a_round(dt):
             resetgame()
             print('2222---------------------------------------------------------------------')
             show_real_car=False
+
 clock.schedule_interval(run_agent, 1/60)
 clock.schedule_interval(run_an_episode, 1/60)
 clock.schedule_interval(run_a_round, 1/60)
-#clock.schedule_interval(move,1/60)
+
+clock.schedule_interval(move,1/60)
+
+#clock.schedule_interval(on_text_motion,1/60)
 def run_game():
     app.run()
 
