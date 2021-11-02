@@ -10,17 +10,17 @@ import random, math
 
 
 TOTAL_GAMETIME = 1000 # Max game time for one episode
-N_EPISODES = 5001
+N_EPISODES = 10001
 Episodes_counter = 0
 REPLACE_TARGET = 50 
 GameTime = 0 
 GameHistory = []
-ddqn_agent = DDQNAgent(alpha=0.0005, gamma=0.999995, n_actions=6, epsilon=1.0, epsilon_end=0.01, batch_size=96, input_dims=10)
-#ddqn_agent = DDQNAgent(alpha=0.0005, gamma=0.99, n_actions=5, epsilon=0.02, epsilon_end=0.01, epsilon_dec=0.999, replace_target= REPLACE_TARGET, batch_size=64, input_dims=10,fname='ddqn_model.h5')
+ddqn_agent = DDQNAgent(alpha=0.0005, gamma=0.99, n_actions=6, epsilon=1.0, batch_size=64, input_dims=10)
+#ddqn_agent = DDQNAgent(alpha=0.0005, gamma=0.99, n_actions=6, epsilon=0.5, epsilon_end=0.01,batch_size=64, input_dims=10)
 # if you want to load the existing model uncomment this line.
 # careful an existing model might be overwritten
 ddqn_agent.load_model()
-ddqn_agent.update_network_parameters()
+#ddqn_agent.update_network_parameters()
 
 ddqn_scores = []
 eps_history = []
@@ -54,6 +54,10 @@ default_distance=Car.set_default_distance(Car.lines)
 start_button=shapes.BorderedRectangle(0, 460, 150, 40, color=(20, 200, 20),border_color=(200,20,20),batch=button)
 start_button.opacity=150
 button_text=text.Label('start learning',font_name='Times New Roman',font_size=16,x=10, y=475,batch=button,color=(255,255,255,255))
+move_up=shapes.BorderedRectangle(782,464,30,30,color=(156,34,199),batch=button)
+move_down=shapes.BorderedRectangle(782,428,30,30,color=(156,134,199),batch=button)
+move_left=shapes.BorderedRectangle(746,428,30,30,color=(156,34,199),batch=button)
+move_right=shapes.BorderedRectangle(818,428,30,30,color=(156,34,199),batch=button)
 #################################
 def on_mouse_press(x,y, button, modifier):
     global learnning_started
@@ -129,7 +133,7 @@ def resetgame():
     default_distance=Car.set_default_distance(Car.lines)
     for _ in range(len(Track_gols)):
         Track_gols[_][1]=False
-    Track_gols[20][1]=True
+    Track_gols[23][1]=True
     for _ in keyboard:
         keyboard[_]=False
     for _ in range(len(Track_gols)):
@@ -153,21 +157,21 @@ def on_text_motion(dt,bytf=False):
         car(0,Car.velocity)
     if (not keyboard[window.key.MOTION_LEFT] and not keyboard[window.key.MOTION_RIGHT]) and rotation_angel<11:
         rotation_angel+=5
-    distence=default_distance
+    distence=[(1000-default_distance[i])/1000 for i in range(len(default_distance))]
     for i in range(0,len(Tcrack_lines)):
         for j in range(0,len(Car.lines)):
             x=(hover(Car.lines[j],Tcrack_lines[i].x2,Tcrack_lines[i].y2,Tcrack_lines[i].x,Tcrack_lines[i].y,\
                 Car.lines[j][0].x2,Car.lines[j][0].y2,Car.lines[j][0].x,Car.lines[j][0].y))
             if x!=False:
                 if distence[j] and x<distence[j] or not distence[j]:
-                    distence[j]=x/100
+                    distence[j]=(1000-x)/1000
         for j in range(len(Car.car_shape)):
             if(hover(False,Tcrack_lines[i].x2,Tcrack_lines[i].y2,Tcrack_lines[i].x,Tcrack_lines[i].y,\
                 Car.car_shape[j].x2,Car.car_shape[j].y2,Car.car_shape[j].x,Car.car_shape[j].y)):
                 if not done:
                     reward-=1
                     done = True
-                    print('-1')
+                    print('-1',end="")
     x=True
     for _ in range(len(Track_gols)):
         for i in range(len(Car.car_shape)):
@@ -175,7 +179,7 @@ def on_text_motion(dt,bytf=False):
                 Car.car_shape[i].x2,Car.car_shape[i].y2,Car.car_shape[i].x,Car.car_shape[i].y)) and Track_gols[_][1]:
                 Track_gols[_][1]=False
                 if x:
-                    print('+1')
+                    print('+1',end="")
                     reward+=1
                     x=False
                 if _+1==len(Track_gols):
@@ -198,24 +202,37 @@ def on_text_motion(dt,bytf=False):
     else:
         return done
 def step(dt,action,bytf=False):
+    global move_up,move_down,move_left,move_right
     if action==0:
         keyboard[window.key.MOTION_UP]=True
         keyboard[window.key.MOTION_DOWN]=False
+        move_up.color=(200,20,20)
+        move_down.color=(156,134,199)
     elif action==1:
         keyboard[window.key.MOTION_DOWN]=True
         keyboard[window.key.MOTION_UP]=False
+        move_down.color=(200,20,20)
+        move_up.color=(156,34,199)
     elif action==2:
         keyboard[window.key.MOTION_LEFT]=True
         keyboard[window.key.MOTION_RIGHT]=False
+        move_left.color=(200,20,20)
+        move_right.color=(156,34,199)
     elif action==3:
         keyboard[window.key.MOTION_RIGHT]=True
         keyboard[window.key.MOTION_LEFT]=False
+        move_right.color=(200,20,20)
+        move_left.color=(156,34,199)
     elif action==4:
         keyboard[window.key.MOTION_RIGHT]=False
         keyboard[window.key.MOTION_LEFT]=False
+        move_right.color=(156,34,199)
+        move_left.color=(156,34,199)
     elif action==5:
         keyboard[window.key.MOTION_DOWN]=False
         keyboard[window.key.MOTION_UP]=False
+        move_down.color=(156,134,199)
+        move_up.color=(200,20,20)
     return on_text_motion(dt,bytf)
 
 resetgame()
@@ -233,7 +250,6 @@ def run_agent(dt):
             if Episodes_counter% 10 == 0 and Episodes_counter> 10:
                 ddqn_agent.save_model()
                 print("save model")
-            print(score) 
             print('episode: ', Episodes_counter,'score: %.2f' % score,' average score %.2f' % avg_score,' epsolon: ', ddqn_agent.epsilon,' memory size', ddqn_agent.memory.mem_cntr % ddqn_agent.memory.mem_size)
             show_real_car=True
             render_actions=list_of_actions
@@ -243,11 +259,11 @@ def run_agent(dt):
         done = False
         score = 0
         counter = 0
-        observation_= [i/100 for i in default_distance]
+        observation_= [(1000-i)/1000 for i in default_distance]
         observation = np.array(observation_)
         gtime = 0   # set game time back to 0
         if not first_game:
-            print('111111---------------------------------------------------------------------')
+            print('-------------------------------Render game--------------------------------------')
 
 def run_an_episode(dt):
     global learnning_started,done,observation,counter,score,gtime,first_game,list_of_actions
@@ -292,12 +308,12 @@ def run_a_round(dt):
             resetgame()
             done=False
             show_real_car=False
-            print('2222---------------------------------------------------------------------')
+            print('\n-------------------------------Render END--------------------------------------')
             return False
         render_actions.pop(0)
         if render_actions==[]:
             resetgame()
-            print('2222---------------------------------------------------------------------')
+            print('\n-------------------------------Render END--------------------------------------')
             show_real_car=False
 
 clock.schedule_interval(run_agent, 1/60)
