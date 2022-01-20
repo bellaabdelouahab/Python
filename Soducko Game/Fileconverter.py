@@ -1,5 +1,5 @@
 from tkinter import Tk,Label,Entry,Button
-from pickle5 import load,dump
+from pickle import load,dump
 from pandas import read_csv,DataFrame,ExcelWriter
 wind=Tk()
 wind.title("Traitment des fichier")

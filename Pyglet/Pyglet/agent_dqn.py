@@ -1,5 +1,6 @@
 from keras.layers import Dense, Activation
 from keras.models import Sequential, load_model
+from keras.saving.saved_model.load import load
 from tensorflow.keras.optimizers import Adam
 import numpy as np
 
@@ -48,16 +49,16 @@ def build_dqn(lr, n_actions, input_dims, fc1_dims, fc2_dims):
                 Activation('relu'),
                 Dense(fc2_dims),
                 Activation('relu'),
-                Dense(n_actions)])
-    model.build((512, 10))
+                Dense(n_actions)],
+                Activation('relu'),)
     model.compile(optimizer=Adam(learning_rate=lr), loss='mse')
 
     return model
 
 class DDQNAgent(object):
     def __init__(self, alpha, gamma, n_actions, epsilon, batch_size,
-                 input_dims, epsilon_dec=0.9996,  epsilon_end=0.01,
-                 mem_size=1000000, fname='ddqn_model.h5', replace_target=100):
+                 input_dims, epsilon_dec=0.995,  epsilon_end=0.01,
+                 mem_size=1000000, fname='ddqn_model_.h5', replace_target=25):
         self.action_space = [i for i in range(n_actions)]
         self.n_actions = n_actions
         self.gamma = gamma
@@ -112,7 +113,8 @@ class DDQNAgent(object):
             self.epsilon = self.epsilon*self.epsilon_dec if self.epsilon > \
                            self.epsilon_min else self.epsilon_min
             if self.memory.mem_cntr % self.replace_target == 0:
-                self.update_network_parameters()
+                #self.update_network_parameters()
+                print('')
 
     def update_network_parameters(self):
         self.q_target.set_weights(self.q_eval.get_weights())
@@ -122,6 +124,7 @@ class DDQNAgent(object):
 
     def load_model(self):
         self.q_eval = load_model(self.model_file)
+        self.q_target = load_model(self.model_file)
         # if we are in evaluation mode we want to use the best weights for
         # q_target
         if self.epsilon == 0.0:
