@@ -46,7 +46,6 @@ class Fit:
         Q = np.random.randn(len(X[0]), 1)
         for i in range(100):
             Gradian=1/self.length*(X_T.dot(X.dot(Q)-Y))
-            # print(Gradian)
             Q=Q-lr*Gradian
         self.Predict=lambda x:self.DeNormalizeData(\
                             Q[0] +sum([self.NormalizeData(x,self.inputNrmlzer)[i-1]*Q[i]\
@@ -78,34 +77,33 @@ Y = np.array(dataset.iloc[:,2].values)
 from sklearn.preprocessing import PolynomialFeatures
 poly_reg = PolynomialFeatures(degree=3)
 X_poly = poly_reg.fit_transform(X)
-from sklearn.linear_model import LinearRegression
-lin_reg = LinearRegression()
-lin_reg.fit(X_poly,Y)
+# from sklearn.linear_model import LinearRegression
+# lin_reg = LinearRegression()
+# lin_reg.fit(X_poly,Y)
 # print(lin_reg.predict(X_poly))
-def NormalizeDatax(data):
-    return (data - np.min(data)) / (np.max(data) - np.min(data))
-def NormalizeData(data,max_,min_):
-    return (data - min_ )/ (max_ - min_)
-def DeNormalizeData(data,max_,min_):
-    return  (data * (max_ - min_)+ min_ )
-X_poly = NormalizeDatax(X_poly)
-Ymax = 1000000
-Ymin = 450000
-print(Ymax,Ymin)
+# def NormalizeDatax(data):
+#     return (data - np.min(data)) / (np.max(data) - np.min(data))
+# def NormalizeData(data,max_,min_):
+#     return (data - min_ )/ (max_ - min_)
+# def DeNormalizeData(data,max_,min_):
+#     return  (data * (max_ - min_)+ min_ )
+# X_poly = NormalizeDatax(X_poly)
+# Ymax = 1000000
+# Ymin = 450000
+# print(Ymax,Ymin)
 # print(Y)
-Y_poly = np.array(NormalizeData(Y,Ymax,Ymin))
+# Y_poly = np.array(NormalizeData(Y,Ymax,Ymin))
 # print(Y_poly)
 # Y_poly = DeNormalizeData(Y_poly,Ymax,Ymin)
 # print(Y_poly)
-fit=Fit(X_poly,Y_poly)
+fit=Fit(X_poly,Y)
 fit.Train(Activation="Gradian-Distance")#,multi=False)
 Ynew=[]
 for i in range(len(X_poly)):
-    print(X_poly[i],Y_poly[i])
     Ynew.append(fit.Predict(np.array(X_poly[i]))[0])
 print(Ynew)
-Y=DeNormalizeData(np.array(Ynew),Ymax,Ymin)
-print(Y)
+# Y=DeNormalizeData(np.array(Ynew),Ymax,Ymin)
+# print(Y)
 testinput=[[1,2],[3,4],[5,6],[7,8],[9,10]]
 testoutput=[500,400,300,200,100]
 # testinput=[1,2,4,5]
