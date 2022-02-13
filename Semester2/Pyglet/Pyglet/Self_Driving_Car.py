@@ -240,7 +240,10 @@ def on_text_motion(dt,bytf=False):
     else:
         return done
 def step(dt,action,bytf=False):
-    if action==2:
+    if not 0<=action<6 or action==6:
+        print(action)
+        exit()
+    if action==0:
         keyboard[window.key.MOTION_UP]=True
         keyboard[window.key.MOTION_DOWN]=False
         buttons.move_up.color=(200,20,20)
@@ -250,7 +253,7 @@ def step(dt,action,bytf=False):
         keyboard[window.key.MOTION_UP]=False
         buttons.move_down.color=(200,20,20)
         buttons.move_up.color=(156,34,199)
-    elif action==0:
+    elif action==2:
         keyboard[window.key.MOTION_LEFT]=True
         keyboard[window.key.MOTION_RIGHT]=False
         buttons.move_left.color=(200,20,20)
@@ -260,16 +263,16 @@ def step(dt,action,bytf=False):
         keyboard[window.key.MOTION_LEFT]=False
         buttons.move_right.color=(200,20,20)
         buttons.move_left.color=(156,34,199)
-    elif action==4:
-        keyboard[window.key.MOTION_RIGHT]=False
-        keyboard[window.key.MOTION_LEFT]=False
-        buttons.move_right.color=(156,34,199)
-        buttons.move_left.color=(156,34,199)
-    elif action==5:
-        keyboard[window.key.MOTION_DOWN]=False
-        keyboard[window.key.MOTION_UP]=False
-        buttons.move_down.color=(156,134,199)
-        buttons.move_up.color=(200,20,20)
+    # elif action==4:
+    #     keyboard[window.key.MOTION_RIGHT]=False
+    #     keyboard[window.key.MOTION_LEFT]=False
+    #     buttons.move_right.color=(156,34,199)
+    #     buttons.move_left.color=(156,34,199)
+    # elif action==5:
+    #     keyboard[window.key.MOTION_DOWN]=False
+    #     keyboard[window.key.MOTION_UP]=False
+    #     buttons.move_down.color=(156,134,199)
+    #     buttons.move_up.color=(200,20,20)
     return on_text_motion(dt,bytf)
 def run_agent(dt):
     global learnning_started,Episodes_counter,done,observation,score,counter,reward,gtime,first_game,show_real_car,list_of_actions,render_actions
@@ -284,7 +287,7 @@ def run_agent(dt):
             if Episodes_counter% 10 == 0 and Episodes_counter> 10:
                 ddqn_agent.save_model()
                 print("save model")
-            print('episode: ', Episodes_counter,'score: %.2f' % score,' average score %.2f' % avg_score,' epsolon: ', ddqn_agent.epsilon,' memory size', ddqn_agent.memory.mem_cntr % ddqn_agent.memory.mem_size)
+            print('episode: ', Episodes_counter,'score: %.2f' % score,' average score %.2f' % avg_score,' epsolon: %4.f % ddqn_agent.epsilon',' memory size', ddqn_agent.memory.mem_cntr % ddqn_agent.memory.mem_size)
             show_real_car=True
             render_actions=list_of_actions
         list_of_actions=[]
@@ -329,7 +332,7 @@ def run_an_episode(dt):
             print('timeout ')
         first_game=False
         if done :
-            print("\nnumber of action taken : ",len(list_of_actions))
+            print("\nnumber of action taken : ",len(list_of_actions),"\n", list_of_actions)
 def run_a_round(dt):
     global render_actions,show_real_car,first_game
     if show_real_car:
@@ -358,7 +361,7 @@ clock.schedule_interval(run_a_round, 1/60)
 
 # uncomment the following line if you want to controlle the car PS: don't train your model while controlling the car
 
-clock.schedule_interval(on_text_motion,1/60)
+# clock.schedule_interval(on_text_motion,1/60)
 
 
 def run_game():

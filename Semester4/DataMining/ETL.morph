@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Version="25" AppVersion="5.1.2.1" ReadKey="readkey.EGqaeGWQo9Q=.1pnzSRQk/JLYdxgGM7mANA==.cNRBcsHhrriB1e2+qjGdenMP0X/z0ZQCaHwlv5yYC49T9823P6OjXywHGDUsuwlpv+v/T/VaNkdHytGLUhKVdNRBBJI4EWbLGz5df32905Q=.yidXGQC6JeS58M5PW8Ut3hi5O9ttHBFVy6NgYslDOYY=." WriteKeyPublic="BgIAAACkAABSU0ExAAgAAAEAAQBBs1s+6hoiuXB0P8Ktb9jQzAhriD5r8nGSFvcSLfW5NoPdhfBp/n9ujTCo6rJO1tg5Ckc6ZqSINOWMpGwWeIuPfyy3g2GWhjKKwLnBcfd6KRE0CfWeiQUfaWrzNs7l36F6bqdwOQIbZQSpq9MX0iEUacoLJZFl10W33CnbtUPwQJq/Rvs21GaYs+0Isv/+Mtiq1lSkmqjcCYfb6A6wH2GN7y1rnPqT5W2oyLvh9CyRfREcMQRLs3q4Kvut6vHrcyvmfu1STN5GSGQoqhdI/C6bMIK4Q3+lUfIUsXQ65hzeW6x8wQkmFSPngxEEMEFP2NikSM6m4p00CxXKOO9YeuCn" StartModuleName="Main" EditedBy="DESKTOP-NH88QKL\Abdelouahab" LastEdited="2022-02-08T09:38:05.1472776Z" Signature="N3JkxqjP8Aet6loXuT11rtdxy8W0eBu4IODSbxMaaWw=">
+  <Modules>
+    <Module Name="Main" AutoRun="true" SelectedGroupName="Group 1">
+      <Groups>
+        <Group Name="Group 1">
+          <ModelObjects>
+            <Table Name="TP_2.rar" Left="220" Top="1" Width="500" Height="300" IsMinimized="false" ActiveActionIndex="0">
+              <Actions>
+                <ImportDelimitedTextAction DecimalSeparator="Point" ThousandSeparator="Default" ShowParsingErrors="false" IgnoreQuoting="false" AddColumnsWhenRowsHaveMoreValuesThanHeaders="false" NumericValuesTreatmentOption="AlwaysAsNumbers" ColumnsDontHaveHeaders="false" LoadAllColumns="true">
+                  <InputFileDefinition Mode="Single">
+                    <FileName Value="C:\Users\Abdelouahab\Pictures\DataBaseModule\TP_2.rar" Type="Path" />
+                  </InputFileDefinition>
+                  <SkipLines Value="0" Type="Number" />
+                  <MaxLines Value="0" Type="Number" />
+                  <Separator SeparatorType="Comma" />
+                  <Encoding EncodingType="UTF8" />
+                </ImportDelimitedTextAction>
+              </Actions>
+              <AnalysisView />
+            </Table>
+          </ModelObjects>
+        </Group>
+      </Groups>
+      <Parameters />
+      <Report UseCustomFileNameForPdfExport="false" ShowPageBorders="true">
+        <Pages>
+          <Page Name="Page 1" IncludeInReport="true">
+            <ReportObjects />
+          </Page>
+        </Pages>
+        <PageSetup Orientation="Landscape" Margin="Narrow" Size="Letter" />
+      </Report>
+    </Module>
+  </Modules>
+  <ProtectedDataConnectors />
+  <Resources />
+</Project>
