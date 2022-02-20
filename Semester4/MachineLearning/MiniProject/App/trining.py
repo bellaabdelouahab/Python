@@ -7,7 +7,9 @@ from sklearn.ensemble import RandomForestClassifier
 
 def Main():
     # import Data
-    VoiceDataSet = pd.read_csv("App/voice.csv")
+    # import os
+    # print(os.getcwd())
+    VoiceDataSet = pd.read_csv("C:/Git-hub/Python/Semester4/MachineLearning/MiniProject/App/voice.csv")
     #Print head
     print(VoiceDataSet.head(5))
     #nbr of clumns
