@@ -9,7 +9,7 @@ def Main():
     # import Data
     # import os
     # print(os.getcwd())
-    VoiceDataSet = pd.read_csv("C:/Git-hub/Python/Semester4/MachineLearning/MiniProject/App/voice.csv")
+    VoiceDataSet = pd.read_csv("C:/Git-hub/Python/Semester4/MachineLearning/MiniProject/App/voice_.csv")
     #Print head
     print(VoiceDataSet.head(5))
     #nbr of clumns
@@ -23,7 +23,7 @@ def Main():
     
     sns.heatmap(correlation)
     
-    plt.show()
+    # plt.show()
     
     X_ = VoiceDataSet.drop(['label'], axis=1)
 
@@ -34,5 +34,5 @@ def Main():
     Model = RandomForestClassifier(random_state=0)
     
     Model.fit(X_train,y_train)
-    
+    print(X_test)
     print(Model.score(X_test,y_test))

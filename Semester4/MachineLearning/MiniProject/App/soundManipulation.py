@@ -11,12 +11,12 @@ duration = 5  # seconds
 # fs = 48000
 
 
-data, fs = librosa.load('C:/Git-hub/Python/Semester4/MachineLearning/MiniProject/App/sounds/w.wav')
+data, fs = librosa.load('C:/Users/Abdelouahab/Documents/M&M/sample-000000.mp3')
 # data, fs = sf.read('sounds/w.wav')
 
-# sd.play(data[:, 1], fs)
+sd.play(data[:], fs)
 
-# sd.wait()
+sd.wait()
 ipd.Audio(data,fs)
 # print(data[np.argmax(data[:, 1])])
 
