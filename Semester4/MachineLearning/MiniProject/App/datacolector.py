@@ -21,15 +21,15 @@ def spectral_properties(y: np.ndarray, fs: int) -> dict:
     skew = ((z ** 3).sum() / (len(spec) - 1)) / w ** 3
     kurt = ((z ** 4).sum() / (len(spec) - 1)) / w ** 4
     result_d = {
-        'mean': mean,
-        'sd': sd,
-        'median': median,
-        'mode': mode,
-        'Q25': Q25,
-        'Q75': Q75,
+        'mean': mean/1000,
+        'sd': sd/1000,
+        'median': median/1000,
+        'mode': mode/1000,
+        'Q25': Q25/1000,
+        'Q75': Q75/1000,
         'IQR': IQR,
         'skew': skew,
-        'kurt': kurt,
+        'kurt': kurt/1000,
     }
 
     return result_d
@@ -39,11 +39,13 @@ Dataset=[]
 def getaudioprop(i, wavpath, my_wav,gender):
     # print(i," - ",len(my_wav),'-',len(my_list))
     data, fs = librosa.load(wavpath+"/"+my_wav[i])
+    print(fs)
     prop= spectral_properties(data,fs)
     prop["gender"]=gender
     return prop
 
 for i in range(len(my_list)):
+    print(i,"-",len(my_list))
     valuefound=False
     wavpath = "C:/Users/Abdelouahab/Documents/M&M/M&M/1snoke-20120412-hge/"+str(my_list[i])+"/wav"
     my_wav = os.listdir(wavpath)
