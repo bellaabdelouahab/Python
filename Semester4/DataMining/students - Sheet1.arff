@@ -1,0 +1,18 @@
+@RELATION Web
+
+@ATTRIBUTE attribute_0 REAL
+@ATTRIBUTE first_name string
+@ATTRIBUTE last_name string
+@ATTRIBUTE date_of_birth Date "yyyy-MM-dd HH:mm:ss"
+@ATTRIBUTE gender {F,M}
+
+@DATA
+1,"John","Doe","2012-04-03 12:12:12",M
+2,"Jane","Smith","2001-04-03 12:12:12",F
+3,"Sarah","Thomas","2002-04-03 12:12:12",M
+4,"Frank","Brown","2003-04-03 12:12:12",M
+5,"Mike","Davis","2007-04-03 12:12:12",F
+6,"Jennifer","Wilson","2011-04-03 12:12:12",M
+7,"Jessica","Garcia","2021-04-03 12:12:12",F
+8,"Fred","Clark","2022-04-03 12:12:12",F
+9,"Bob","Lopez","2000-04-03 12:12:12",F

@@ -2,7 +2,7 @@ from tkinter import filedialog
 from tkinter import *
 
 def browse_button():
-    filename = filedialog.askdirectory()
+    filename = filedialog.askopenfile()
     print(filename)
     return filename
 

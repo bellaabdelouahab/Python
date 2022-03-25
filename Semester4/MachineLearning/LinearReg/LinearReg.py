@@ -63,7 +63,8 @@ class Fit:
         X_T=X.T
         Y = np.reshape(self.output, (len(self.output), 1))
         Q = np.random.randn(degree+1, 1)
-        # exit()
+
+        # exit() 
         for i in range(1000):
             Gradian=(X_T.dot(X.dot(Q)-Y))
             Q=Q-Gradian*(lr/self.length)
