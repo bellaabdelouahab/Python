@@ -35,12 +35,12 @@ class Fit:
         else:
             print("wtf")
     def Linear(self):
-        Q1=(np.mean([self.input[i]*self.output[i] for i in range(self.length)])-self.input_mean*self.output_mean)/np.var(self.input)
+        Q1=(np.mean(self.input*self.output)-self.input_mean*self.output_mean)/np.var(self.input)
         Q0=self.output_mean-Q1*self.input_mean
         self.Predict=lambda x: Q0+x*Q1
     def Gradian(self,lr):
         X = np.array([[i,1] for i in self.input])
-        X_=np.array([[i[0] for i in X],[i[1] for i in X]])
+        X_= np.array([[i[0] for i in X],[i[1] for i in X]])
         Q = np.array([[10],[10]])
         Y = np.array([[i] for i in self.output])
         for i in range(1000):
@@ -48,12 +48,12 @@ class Fit:
         self.Predict=lambda x: Q[1]+x*Q[0]
     def Gradian_multi(self,lr):
         X = np.c_[np.ones((len(self.input), 1)), self.input]
-        X_T=X.T
+        X_=X.T
         Y = np.reshape(self.output, (len(self.output), 1))
         Q = np.random.randn(len(X[0]), 1)
         print(Q)
         for i in range(10000):
-            Gradian=1/self.length*(X_T.dot(X.dot(Q)-Y))
+            Gradian=1/self.length*(X_.dot(X.dot(Q)-Y))
             Q=Q-lr*Gradian
         self.Predict=lambda x:self.DeNormalizeData(Q[0]+sum([self.NormalizeData(np.array(x),self.inputNrmlzer)[i-1]*Q[i] for i in range(1,len(Q))]),self.outputNrmlzer)
         return Q
@@ -105,3 +105,5 @@ print(fit.Predict(X))
 # plt.plot(X, Ynew,color='blue')
 # plt.plot(X,lin_reg.predict(X_poly),color='gold')
 # plt.show()
+from sklearn.linear_model import LogisticRegressi
+import sklearn.neighbors
